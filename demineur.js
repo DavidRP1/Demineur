@@ -21,7 +21,7 @@ var demineur = function(largeur, hauteur, nbMines){
 };
 
 
-// tests unitaires de la proc´edure afficherImage et la fonction placerMines
+// tests unitaires de la procedure afficherImage et la fonction placerMines
 var testDemineur = function(){
 };
 
