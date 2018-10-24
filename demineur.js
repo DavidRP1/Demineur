@@ -4,11 +4,25 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-load("image.js");
+load("images.js");
+
+
+var coordTuiles = function(coordX, coordY){
+    coordX = Math.floor(coordX/16);
+    coordY = Math.floor(coordY/16);
+    return ([coordX, coordY]);
+};
 
 
 var demineur = function(largeur, hauteur, nbMines){
     setScreenMode(largeur*16, hauteur*16);
+    
+    //Dessiner intielement
+    for(var i = 0; i < largeur; i++){
+        for(var j = 0; j < hauteur; j++){
+            afficherImage(i * 16, j * 16, colormap, images[11]);
+        }
+    }
     
     var positionClic = attendreClic();
     
@@ -24,22 +38,26 @@ var demineur = function(largeur, hauteur, nbMines){
         for(var j = 0; j < rang.length; j++){
             // si c'est une mine, utilise image 9
             if (tableauMines[i][j] == true){
-                print("i, j", i, j);
+               // print("i, j", i, j); // a deleter plus tard
                 rangImage.push(9);
                 continue;
             }
             //ce n'est pas une mine, donc
             //compter la numbre de mines autour de cette position
             var mines = 0;
+            if (j - 1 >= 0){
+			    mines = tableauMines[i][j - 1] == true ? mines + 1 : mines;
+			}
+			if (j + 1 >= 0){
+			    mines = tableauMines[i][j + 1] == true ? mines + 1 : mines;
+			}
             if ( i - 1 >= 0){
                 mines = tableauMines[i-1][j] == true ? mines + 1 : mines;
                 if(j - 1 >= 0){
                     mines = tableauMines[i - 1][j - 1] == true ? mines + 1 : mines;
-                    mines = tableauMines[i][j - 1] == true ? mines + 1 : mines;
                 }
                 if(j + 1 < rang.length){
                     mines = tableauMines[i - 1][j + 1] == true ? mines + 1 : mines;
-                    mines = tableauMines[i][j + 1] == true ? mines + 1 : mines;
                 }
             }
             if ( i + 1 < tableauMines.length){
@@ -56,19 +74,14 @@ var demineur = function(largeur, hauteur, nbMines){
         tableauAfficher.push(rangImage);
     }
     
-    //Dessiner intielement
-    for(var i = 0; i < largeur; i++){
-        for(var j = 0; j < hauteur; j++){
-            afficherImage(i * 16, j * 16, colormap, images[11]);
-        }
-    }
+    
     
     // a complete
     var fini = false;
     while (!fini){
-        positionClic = attendreClic();
-        if(tableauMines[positionClic.x][positionClic.y] == false){
+        if(tableauMines[positionClic.y][positionClic.x] == false){
             //Redessiner les champs
+            afficherImage(positionClic.x * 16, positionClic.y * 16, colormap, images[tableauAfficher[positionClic.y][positionClic.x]]);
             
         } else {
             fini = true;
@@ -79,7 +92,10 @@ var demineur = function(largeur, hauteur, nbMines){
                     afficherImage(j * 16, i * 16, colormap, images[tableauAfficher[i][j]]);
                 }
             }
+            break;
         }
+        
+        positionClic = attendreClic();
     }
     
 };
@@ -97,18 +113,15 @@ var attendreClic = function(){
         clic = getMouse().down;
     }
     
-    return({x: getMouse().x, y: getMouse().y})
+    var coord = coordTuiles(getMouse().x, getMouse().y);
+    
+    return({x: coord[0], y: coord[1]})
 };
 
 
 
 var placerMines = function(largeur, hauteur, nbMines, x, y){
     
-    // tranformation des coordonnees du premier clic en nombre de tuiles au
-    // lieu du nombre de pixels
-    
-    x = Math.floor(x/16);
-    y = Math.floor(y/16);
     var coordClic = [x,y];
     
     var rangeeMines = [];
@@ -148,7 +161,7 @@ var placerMines = function(largeur, hauteur, nbMines, x, y){
             rangeeMines = [];
         }
      
-        tableauMines[y][x] = false; 
+        tableauMines[coordClic[1]][coordClic[0]] = false; 
     }
         
     return (tableauMines);
@@ -178,6 +191,3 @@ var testDemineur = function(){
 
 
 testDemineur();
-
-
-
