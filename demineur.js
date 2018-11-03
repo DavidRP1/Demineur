@@ -50,16 +50,23 @@ var demineur = function(largeur, hauteur, nbMines){
     var positionClic = attendreClic();
     
     var tableauMines = placerMines(largeur, hauteur, nbMines, positionClic.x, positionClic.y);
-    
-    var fini = false;
-    while (!fini){
-        if(tableauMines[positionClic.y][positionClic.x] == false){
+	
+	var tuilesCachees = largeur*hauteur;
+
+	
+    while (true){ 
+		
+		if(tableauMines[positionClic.y][positionClic.x] == false){
             //Redessiner les champs
             var numbreImage = obtenirImageNumbre(positionClic.x, positionClic.y, tableauMines);
             
-            if(numbreImage != 0)
+            if(numbreImage != 0){
                 afficherImage(positionClic.x * 16, positionClic.y * 16, colormap, images[numbreImage]);
-            else {
+				if (tableauMines[positionClic.y][positionClic.x] != "devoilee"){
+					tableauMines[positionClic.y][positionClic.x] = "devoilee"
+					tuilesCachees--;
+				}
+			} else {
                 //Si le joueur clique sur une tuile qui n’est pas une mine,
                 //les tuiles directement voisines ne contiennent pas de mine,
                 //alors les tuiles directement voisines sont devoilees en plus de la tuile cliquee
@@ -69,16 +76,26 @@ var demineur = function(largeur, hauteur, nbMines){
                     for(var j = 0; j < positionY.length; j++){
                         var posX = positionX[i];
                         var posY = positionY[j];
-                        if(0 <= posX && posX < tableauMines[0].length
-                           && 0 <= posY && posY < tableauMines.length){
+                        if(0<=posX && posX<tableauMines[0].length
+                           && 0<=posY && posY<tableauMines.length){
                             var numbreImage = obtenirImageNumbre(posX, posY, tableauMines);
                             afficherImage(posX * 16, posY * 16, colormap, images[numbreImage]);
+							if (tableauMines[posY][posX] != "devoilee"){
+								tableauMines[posY][posX] = "devoilee"
+								tuilesCachees--;
+							}
                         }
                     }
                 }
             }
+			if (tuilesCachees == nbMines){
+				pause(0.01); // laisser le temps d'afficher l'image finale avant le message de victoire
+				alert ("Vous avez gagne!");
+				break;
+			}
+			
         } else {
-            fini = true;
+            //si le joueur clique sur une mine
             //Redessiner le map
             for(var i = 0; i < tableauMines.length; i++){
                 var rang = tableauMines[i];
@@ -93,10 +110,13 @@ var demineur = function(largeur, hauteur, nbMines){
                     }
                 }
             }
-            break;
+            pause(0.01); // laisser le temps d'afficher l'image finale avant le message d'echec
+			alert ("Vous avez perdu!");
+			break;
         }
         
         positionClic = attendreClic();
+
     }
     
 };
@@ -186,10 +206,9 @@ var afficherImage = function(x, y, colormap, image){
 
 // tests unitaires de la procedure afficherImage et la fonction placerMines
 var testDemineur = function(){
-    demineur(20,15,10);
-    //afficherImage(1,1,colormap,images[7]);
+
+   // assert (exportScreen(afficherImage(1,1,colormap,images[7])));
 };
 
 
 testDemineur();
-
