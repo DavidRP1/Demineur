@@ -12,7 +12,8 @@
 // importer le fichier images.js
 load("images.js");
 
-
+//definir la taille d'image
+var imageTaille = 16;
 
 // procedure principale qui s’occupe du deroulement du jeu en temps reel
 var demineur = function(largeur, hauteur, nbMines){
@@ -31,12 +32,12 @@ var demineur = function(largeur, hauteur, nbMines){
 	}
 	
 	// la taille de l'ecran est ajustee selon les parametres entres
-	setScreenMode(largeur*16, hauteur*16);
+	setScreenMode(largeur*imageTaille, hauteur*imageTaille);
     
     // affiche intialement toutes les tuiles comme non-devoilees 
     for(var i = 0; i < largeur; i++){
         for(var j = 0; j < hauteur; j++){
-            afficherImage(i * 16, j * 16, colormap, images[11]);
+            afficherImage(i * imageTaille, j * imageTaille, colormap, images[11]);
         }
     }
     
@@ -64,7 +65,7 @@ var demineur = function(largeur, hauteur, nbMines){
 			// s'il y a au moins une mine adjacente a la tuile cliquee, devoile
 			// seulement cette tuile
             if(numImage != 0){
-                afficherImage(posClic.x * 16, posClic.y * 16, colormap, 
+                afficherImage(posClic.x * imageTaille, posClic.y * imageTaille, colormap, 
 				images[numImage]);
 				
 				// garde le compte du nombre de mines encore cachees
@@ -87,7 +88,7 @@ var demineur = function(largeur, hauteur, nbMines){
                         if(0<=posX && posX<tabMines[0].length
                            && 0<=posY && posY<tabMines.length){
                             var numImage = obtNumImage(posX, posY, tabMines);
-                            afficherImage(posX * 16, posY * 16, colormap, 
+                            afficherImage(posX * imageTaille, posY * imageTaille, colormap, 
 							images[numImage]);
 							
 							// garde le compte du nombre de mines cachees
@@ -117,9 +118,9 @@ var demineur = function(largeur, hauteur, nbMines){
                 for(var j = 0; j < rang.length; j++){
                     if(tabMines[i][j] == true) {
                         if(j == posClic.x && i == posClic.y){
-                            afficherImage(j * 16, i * 16, colormap, images[10]);
+                            afficherImage(j * imageTaille, i * imageTaille, colormap, images[10]);
                         } else {
-                            afficherImage(j * 16, i * 16, colormap, images[9]);
+                            afficherImage(j * imageTaille, i * imageTaille, colormap, images[9]);
                         }
                     }
                 }
@@ -159,9 +160,10 @@ var attendreClic = function(){
     }
     
 	// enregistre la position de la tuile cliquee 
-    var coord = coordTuiles(getMouse().x, getMouse().y);
-    
-    return({x: coord[0], y: coord[1]});
+    var coordX = Math.floor(getMouse().x / imageTaille);
+    var coordY = Math.floor( getMouse().y / imageTaille);
+    return({x: coordX, y: coordY});
+
 };
 
 
@@ -172,7 +174,6 @@ var attendreClic = function(){
 var placerMines = function(largeur, hauteur, nbMines, x, y){
     
     var coordClic = [x,y]; // emplacement de la premiere tuile cliquee
-    var rangeeMines = [];  // rangees dans le tableau a construire
     var tabMines = [];	   // tableau a construire 
     
 	// verifie que les parmetres d'entree sont valides
@@ -190,17 +191,25 @@ var placerMines = function(largeur, hauteur, nbMines, x, y){
 		// si le nombre de mines a placer est plus petit que 
 		// largeur*hauteur-1, definit l'emplacement des mines a l'aide
 		// de methode aleatoire
-		if (nbMines < ((hauteur*largeur)-1)){
+		var siMinePlusPetit = nbMines < ((hauteur*largeur)-1);
 			
-			for (var i=0; i<hauteur; i++){
-				for (var j=0; j<largeur; j++){
+		for (var i=0; i<hauteur; i++){
+    		var rangeeMines = [];  // rangees dans le tableau a construire
+			for (var j=0; j<largeur; j++){
+				if(siMinePlusPetit){
 					rangeeMines.push(false);
+				}else {
+					// si toutes les tuiles excepte la premiere tuile cliquee cachent 
+					// des mines, definit l'emplacement des mines sans utiliser
+					// de methode aleatoire
+					rangeeMines.push(true);
 				}
-				
-				tabMines.push(rangeeMines);
-				rangeeMines = [];
 			}
-			
+		
+			tabMines.push(rangeeMines);
+		}
+		
+		if(siMinePlusPetit){
 			var k=0;
 			while (k < nbMines){
 				var xMine = Math.floor(Math.random()*largeur);
@@ -213,32 +222,13 @@ var placerMines = function(largeur, hauteur, nbMines, x, y){
 					k++;
 				}
 			}
-			
-		// si toutes les tuiles excepte la premiere tuile cliquee cachent 
-		// des mines, definit l'emplacement des mines sans utiliser
-		// de methode aleatoire
-		} else if (nbMines == ((hauteur*largeur)-1)){
-			
-			for (var i=0; i<hauteur; i++){
-				for (var j=0; j<largeur; j++){
-					rangeeMines.push(true);
-				}
-				
-				tabMines.push(rangeeMines);
-				rangeeMines = [];
-			}
-			
+		} else {
 			tabMines[coordClic[1]][coordClic[0]] = false;
-		}
+		}	
+	}	
+	
+	return (tabMines);
 		
-		return (tabMines);
-		
-		
-	// s'il y a une invalidite dans les parametres d'entree, 
-	// retourne un tableau vide	
-	} else {	
-		return ([]);
-    }
 };
 
 
@@ -262,16 +252,6 @@ var afficherImage = function(x, y, colormap, image){
         }
     }
 };
-
-
-
-// fonction qui transforme les coordonnees de tuiles en coordonnes de pixel
-var coordTuiles = function(coordX, coordY){
-    coordX = Math.floor(coordX / 16);
-    coordY = Math.floor(coordY / 16);
-    return ([coordX, coordY]);
-};
-
 
 
 // fonction qui verifie l'image a afficher pour une tuile specifique
