@@ -12,8 +12,10 @@
 // importer le fichier images.js
 load("images.js");
 
-//definir la taille d'image
-var imageTaille = 16;
+// definit la taille d'un cote d'une tuile du jeu
+var tailleTuile = images[0].length;
+
+
 
 // procedure principale qui s’occupe du deroulement du jeu en temps reel
 var demineur = function(largeur, hauteur, nbMines){
@@ -32,12 +34,12 @@ var demineur = function(largeur, hauteur, nbMines){
 	}
 	
 	// la taille de l'ecran est ajustee selon les parametres entres
-	setScreenMode(largeur*imageTaille, hauteur*imageTaille);
+	setScreenMode(largeur*tailleTuile, hauteur*tailleTuile);
     
     // affiche intialement toutes les tuiles comme non-devoilees 
-    for(var i = 0; i < largeur; i++){
-        for(var j = 0; j < hauteur; j++){
-            afficherImage(i * imageTaille, j * imageTaille, colormap, images[11]);
+    for(var i=0; i<largeur; i++){
+        for(var j=0; j<hauteur; j++){
+            afficherImage (i*tailleTuile, j*tailleTuile, colormap, images[11]);
         }
     }
     
@@ -65,8 +67,8 @@ var demineur = function(largeur, hauteur, nbMines){
 			// s'il y a au moins une mine adjacente a la tuile cliquee, devoile
 			// seulement cette tuile
             if(numImage != 0){
-                afficherImage(posClic.x * imageTaille, posClic.y * imageTaille, colormap, 
-				images[numImage]);
+                afficherImage(posClic.x*tailleTuile, posClic.y*tailleTuile, 
+				colormap, images[numImage]);
 				
 				// garde le compte du nombre de mines encore cachees
 				if (tabMines[posClic.y][posClic.x] != "devoilee"){
@@ -77,19 +79,19 @@ var demineur = function(largeur, hauteur, nbMines){
 			// si les tuiles adjacentes ne contiennent pas de mine, devoile
             // les tuiles adjacentes egalement
 			} else {
-               
                 var positionX = [posClic.x - 1, posClic.x, posClic.x + 1];
                 var positionY = [posClic.y - 1, posClic.y, posClic.y + 1];
 				
-                for(var i = 0 ; i < positionX.length; i++){
-                    for(var j = 0; j < positionY.length; j++){
+                for(var i=0 ; i<positionX.length; i++){
+                    for(var j=0; j<positionY.length; j++){
                         var posX = positionX[i];
                         var posY = positionY[j];
+						
                         if(0<=posX && posX<tabMines[0].length
                            && 0<=posY && posY<tabMines.length){
                             var numImage = obtNumImage(posX, posY, tabMines);
-                            afficherImage(posX * imageTaille, posY * imageTaille, colormap, 
-							images[numImage]);
+                            afficherImage(posX*tailleTuile, posY*tailleTuile, 
+							colormap, images[numImage]);
 							
 							// garde le compte du nombre de mines cachees
 							if (tabMines[posY][posX] != "devoilee"){
@@ -113,14 +115,16 @@ var demineur = function(largeur, hauteur, nbMines){
         } else {
 			
 			// affiche la mine cliquee en rouge et devoile le reste des mines
-            for(var i = 0; i < tabMines.length; i++){
+            for(var i=0; i<tabMines.length; i++){
                 var rang = tabMines[i];
-                for(var j = 0; j < rang.length; j++){
+                for(var j=0; j<rang.length; j++){
                     if(tabMines[i][j] == true) {
-                        if(j == posClic.x && i == posClic.y){
-                            afficherImage(j * imageTaille, i * imageTaille, colormap, images[10]);
+                        if(j==posClic.x && i==posClic.y){
+                            afficherImage(j*tailleTuile, i*tailleTuile, 
+							colormap, images[10]);
                         } else {
-                            afficherImage(j * imageTaille, i * imageTaille, colormap, images[9]);
+                            afficherImage(j*tailleTuile, i*tailleTuile, 
+							colormap, images[9]);
                         }
                     }
                 }
@@ -134,9 +138,7 @@ var demineur = function(largeur, hauteur, nbMines){
         
 		// la position de la derniere tuile cliquee par le joueur est mis a jour
         posClic = attendreClic();
-
-    }
-    
+    }  
 };
 
 
@@ -160,10 +162,9 @@ var attendreClic = function(){
     }
     
 	// enregistre la position de la tuile cliquee 
-    var coordX = Math.floor(getMouse().x / imageTaille);
-    var coordY = Math.floor( getMouse().y / imageTaille);
+    var coordX = Math.floor(getMouse().x / tailleTuile);
+    var coordY = Math.floor( getMouse().y / tailleTuile);
     return({x: coordX, y: coordY});
-
 };
 
 
@@ -174,7 +175,7 @@ var attendreClic = function(){
 var placerMines = function(largeur, hauteur, nbMines, x, y){
     
     var coordClic = [x,y]; // emplacement de la premiere tuile cliquee
-    var tabMines = [];	   // tableau a construire 
+    var tabMines = [];	   // tableau de mines a construire 
     
 	// verifie que les parmetres d'entree sont valides
     var condLargeur = (largeur>0 && largeur===+largeur);
@@ -191,29 +192,34 @@ var placerMines = function(largeur, hauteur, nbMines, x, y){
 		// si le nombre de mines a placer est plus petit que 
 		// largeur*hauteur-1, definit l'emplacement des mines a l'aide
 		// de methode aleatoire
-		var siMinePlusPetit = nbMines < ((hauteur*largeur)-1);
-			
+		var nbreMinesPetit = nbMines < ((hauteur*largeur)-1);
+		
+		// construit une premiere esquisse du tableau de mines
 		for (var i=0; i<hauteur; i++){
-    		var rangeeMines = [];  // rangees dans le tableau a construire
+    		var rangeeMines = [];
 			for (var j=0; j<largeur; j++){
-				if(siMinePlusPetit){
+				
+				if(nbreMinesPetit){
 					rangeeMines.push(false);
-				}else {
-					// si toutes les tuiles excepte la premiere tuile cliquee cachent 
-					// des mines, definit l'emplacement des mines sans utiliser
-					// de methode aleatoire
+					
+				// si toutes les tuiles excepte la premiere tuile cliquee 
+				// cachent des mines, definit l'emplacement des mines 
+				// sans utiliser de methode aleatoire	
+				} else {
 					rangeeMines.push(true);
 				}
 			}
-		
+			
 			tabMines.push(rangeeMines);
 		}
 		
-		if(siMinePlusPetit){
+		// distribue les mines de facon aleatoire sur le jeu en s'assurant de
+		// ne pas en placer sous la premiere tuile cliquee
+		if(nbreMinesPetit){
 			var k=0;
 			while (k < nbMines){
-				var xMine = Math.floor(Math.random()*largeur);
-				var yMine = Math.floor(Math.random()*hauteur);
+				var xMine = Math.floor(Math.random() * largeur);
+				var yMine = Math.floor(Math.random() * hauteur);
 				var coordMine = [xMine, yMine];
 				
 				if ((tabMines[yMine][xMine] == false) && 
@@ -222,13 +228,15 @@ var placerMines = function(largeur, hauteur, nbMines, x, y){
 					k++;
 				}
 			}
+			
+		// si toutes les tuiles excepte la premiere tuile cliquee cachent des
+		// des mines, enleve la mine sous la premiere tuile
 		} else {
 			tabMines[coordClic[1]][coordClic[0]] = false;
 		}	
 	}	
 	
-	return (tabMines);
-		
+	return (tabMines);	
 };
 
 
@@ -243,9 +251,9 @@ var afficherImage = function(x, y, colormap, image){
     
     //si les entrees sont valides, l'image est affichee
     if (condX && condY){
-        for(var i = 0; i <image.length; i++ ){
+        for(var i=0; i<image.length; i++ ){
             var rang = image[i];
-            for(var j = 0; j < rang.length; j++){
+            for(var j=0; j<rang.length; j++){
                 var color = colormap[rang[j]];
                 setPixel(x+j, y+i, color);
             }
@@ -254,8 +262,9 @@ var afficherImage = function(x, y, colormap, image){
 };
 
 
+
 // fonction qui verifie l'image a afficher pour une tuile specifique
-var obtNumImage = function(x,y,tabMines){
+var obtNumImage = function(x, y, tabMines){
 	
     // si c'est une mine, utiliser l'image de mine (i.e. numero 9)
     if(tabMines[y][x] == true)
@@ -267,8 +276,8 @@ var obtNumImage = function(x,y,tabMines){
     var positionX = [x - 1, x, x + 1];
     var positionY = [y - 1, y, y + 1];
     
-    for(var i = 0 ; i < positionX.length; i++){
-        for(var j = 0; j < positionY.length; j++){
+    for(var i=0 ; i<positionX.length; i++){
+        for(var j=0; j<positionY.length; j++){
             var posX = positionX[i];
             var posY = positionY[j];
             if(0<=posX && posX<tabMines[0].length
@@ -285,7 +294,7 @@ var obtNumImage = function(x,y,tabMines){
 // tests unitaires de la procedure afficherImage et la fonction placerMines
 var testDemineur = function(){
     
-    // nous nous limitons a un ecran de 6X6 pixels pour les tests
+    // nous nous limitons a un ecran de 4X4 pixels pour les tests
     setScreenMode(4,4);	
 	
 	// creation de petites images a utiliser pour les tests
@@ -309,28 +318,28 @@ var testDemineur = function(){
      ]];
 	
 	
-   	assert (exportScreen(afficherImage(0,0,colormap,imagesTests[0])) == 
+   	assert (exportScreen(afficherImage(0, 0, colormap, imagesTests[0])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#000000#000000\n#000000#" + 
 	"000000#000000#000000\n#000000#000000#000000#000000");
-	assert (exportScreen(afficherImage(2,2,colormap,imagesTests[1])) == 
+	assert (exportScreen(afficherImage(2, 2, colormap, imagesTests[1])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#000000#000000\n#000000#" +
 	"000000#808080#0000ff\n#000000#000000#808080#0000ff");
-	assert (exportScreen(afficherImage(2,2,colormap,imagesTests[0])) == 
+	assert (exportScreen(afficherImage(2, 2, colormap, imagesTests[0])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#000000#000000\n#000000#" +
 	"000000#808080#808080\n#000000#000000#808080#c0c0c0");
-	assert (exportScreen(afficherImage(-2,2,colormap,imagesTests[3])) == 
+	assert (exportScreen(afficherImage(-2, 2, colormap, imagesTests[3])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#000000#000000\n#000000#" +
 	"000000#808080#808080\n#000000#000000#808080#c0c0c0");
-	assert (exportScreen(afficherImage("g",0,colormap,imagesTests[3])) == 
+	assert (exportScreen(afficherImage("g", 0, colormap, imagesTests[3])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#000000#000000\n#000000#" +
 	"000000#808080#808080\n#000000#000000#808080#c0c0c0");
-	assert (exportScreen(afficherImage(2,1,colormap,imagesTests[3])) == 
+	assert (exportScreen(afficherImage(2, 1, colormap, imagesTests[3])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#808080#ffffff\n#000000#" +
 	"000000#808080#ffffff\n#000000#000000#808080#ffffff");
-	assert (exportScreen(afficherImage(3,3,colormap,imagesTests[2])) == 
+	assert (exportScreen(afficherImage(3, 3, colormap, imagesTests[2])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#808080#ffffff\n#000000#" +
 	"000000#808080#ffffff\n#000000#000000#808080#ffffff");
-	assert (exportScreen(afficherImage(6,7,colormap,imagesTests[2])) == 
+	assert (exportScreen(afficherImage(6, 7, colormap, imagesTests[2])) == 
 	"#808080#808080#000000#000000\n#808080#c0c0c0#808080#ffffff\n#000000#" +
 	"000000#808080#ffffff\n#000000#000000#808080#ffffff");
 	
